@@ -1,0 +1,149 @@
+{
+  "entries": [
+    {
+      "id": 1,
+      "command": "grep -rnw ./* -e 'string that I want'",
+      "description": "find string in directory"
+    },
+    {
+      "id": 2,
+      "command": "find . -name '*.go' -exec sed -i -e 's/www.fubar.com/www.fubar.ftw.com/g' {} \\;",
+      "description": "search & replace string in all files"
+    },
+    {
+      "id": 3,
+      "command": "ls -1 *.csv | sed 's/\\.csv//' | xargs -I_filename mv _filename.csv _filename",
+      "description": "rename files one liner"
+    },
+    {
+      "id": 4,
+      "command": "for i in {1..5}; do go clean -testcache && GO111MODULE=on go test -v; done",
+      "description": "repeat command N times one liner"
+    },
+    {
+      "id": 5,
+      "command": "find . -atime +90 -exec rm {} \\;",
+      "description": "delete stuff older than.."
+    },
+    {
+      "id": 6,
+      "command": "git rebase -i HEAD~N",
+      "description": "git squash N number of commits"
+    },
+    {
+      "id": 7,
+      "command": "git reset --hard HEAD@{2}",
+      "description": "git undo squash. Find reference via 'git reflog'"
+    },
+    {
+      "id": 8,
+      "command": "git config --global url.\\\"git@gitlab.com:\\\".insteadOf \\\"https://gitlab.com/\\\"",
+      "description": "git change default url"
+    },
+    {
+      "id": 9,
+      "command": "cat lintools/.git/config | grep url | awk '{print }' | sed 's/lintools/batch_proc/' | xargs echo",
+      "description": "get git url of a repo. Instead of echo you can use 'git clone'"
+    },
+    {
+      "id": 10,
+      "command": "git branch -d <branch_name>",
+      "description": "delete git branch locally"
+    },
+    {
+      "id": 11,
+      "command": "git push -d <remote_name> <branch_name>",
+      "description": "delete git branch remotely"
+    },
+    {
+      "id": 12,
+      "command": "git branch -m old_branch new_branch",
+      "description": "git rename branch locally"
+    },
+    {
+      "id": 13,
+      "command": "git branch -m old_branch new_branch && it push origin :old_branch && git push --set-upstream origin new_branch",
+      "description": "git rename branch locally & remotely"
+    },
+    {
+      "id": 14,
+      "command": "git push --delete origin tagname",
+      "description": "git delete remote tag"
+    },
+    {
+      "id": 15,
+      "command": "git tag --delete tagname",
+      "description": "git delete local tag"
+    },
+    {
+      "id": 16,
+      "command": "git tag new old && git tag -d old && git push origin :refs/tags/old && git push --tags",
+      "description": "git rename tag"
+    },
+    {
+      "id": 17,
+      "command": "ssh-agent bash -c 'ssh-add /Users/rolandvarga/.ssh/other_id_rsa; git clone git@github.com:rolandvarga/some-repo.git'",
+      "description": "git use different ssh key; clone can be replaced with push etc."
+    },
+    {
+      "id": 18,
+      "command": "docker run -it --entrypoint sh some-image:v0.1.0",
+      "description": "run docker image by overriding entrypoint"
+    },
+    {
+      "id": 19,
+      "command": "[f(x) if condition else g(x) for x in sequence]",
+      "description": "python list comprehension IF statement;\neg: [unicode(x.strip()) if x is not None else '' for x in row]"
+    },
+    {
+      "id": 20,
+      "command": "[f(x) for x in sequence if condition]",
+      "description": "python list comprehension with one condition only"
+    },
+    {
+      "id": 21,
+      "command": "${__cell_0:date:YYYY/MM/DD hhmm}",
+      "description": "Grafana cell timestamp formatting"
+    },
+    {
+      "id": 22,
+      "command": "aws s3 ls s3://some-bucket --recursive --human-readable --summarize",
+      "description": "s3 list objects in bucket"
+    },
+    {
+      "id": 23,
+      "command": "aws s3 cp s3://some-bucket/data.csv .",
+      "description": "s3 download file from bucket"
+    },
+    {
+      "id": 24,
+      "command": "wc -l data.csv",
+      "description": "count number of lines in file"
+    },
+    {
+      "id": 25,
+      "command": "find . -name '*.csv' | xargs wc -l",
+      "description": "count number of lines in multiple files"
+    },
+    {
+      "id": 26,
+      "command": "PYTHONPATH=src/ coverage run --source=src/ -m pytest -v tests && coverage report -m",
+      "description": "python show coverage"
+    },
+    {
+      "id": 27,
+      "command": "diskutil umount force /Volumes/data",
+      "description": "definitely unmount a volume"
+    },
+    {
+      "id": 28,
+      "command": "redis-cli -h localhost --scan --pattern 'some-pattern-*' | xargs redis-cli -h localhost DEL",
+      "description": "redis delete keys matching a pattern"
+    },
+    {
+      "id": 29,
+      "command": "grep -Ei 'from|join' some_file.sql",
+      "description": "grep ignore case for table names"
+    }
+  ]
+}
