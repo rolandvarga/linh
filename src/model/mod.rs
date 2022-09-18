@@ -1,12 +1,13 @@
+use dirs::home_dir;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ord;
 use std::sync::atomic::AtomicUsize;
 
-use std::fs::File;
+use std::fs::{File, OpenOptions};
 use std::io::Read;
+use std::path::Path;
 
 static COUNTER: AtomicUsize = AtomicUsize::new(1);
-static ENTRY_PATH: &str = "entries.json";
 
 #[derive(Debug, Serialize, Deserialize, Ord, Eq, PartialEq, PartialOrd)]
 pub struct Entry {
@@ -27,12 +28,18 @@ impl Entry {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Collection {
-    entries: Vec<Entry>,
+    pub entries: Vec<Entry>,
 }
 
 impl Collection {
     pub fn new() -> Self {
-        let mut file = File::open(ENTRY_PATH).unwrap();
+        let entry_path = get_entry_path();
+        let mut file = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .create(true)
+            .open(entry_path)
+            .unwrap();
 
         let mut contents = String::new();
         let size = file.read_to_string(&mut contents).unwrap();
@@ -61,7 +68,8 @@ impl Collection {
         self.entries.push(entry);
 
         // write Collection as json to file
-        let file = File::create(ENTRY_PATH).unwrap();
+        let entry_path = get_entry_path();
+        let file = File::create(entry_path).unwrap();
         match serde_json::to_writer_pretty(file, self) {
             Ok(_) => {
                 // TODO info!("successfully saved entry: {:?}", entry);
@@ -74,8 +82,12 @@ impl Collection {
             }
         }
     }
+}
 
-    pub fn get_entries(&self) -> &Vec<Entry> {
-        &self.entries
-    }
+fn get_entry_path() -> String {
+    Path::new(&home_dir().unwrap())
+        .join(".cargo/entries.json")
+        .to_str()
+        .unwrap()
+        .to_string()
 }

@@ -9,9 +9,10 @@ extern crate log;
 
 mod model;
 
-fn main() {
-    let version: &str = env!("CARGO_PKG_VERSION");
+static VERSION: &str = env!("CARGO_PKG_VERSION");
+static HEADERS: [&str; 3] = ["ID", "COMMAND", "DESCRIPTION"];
 
+fn main() {
     pretty_env_logger::formatted_builder()
         .filter_level(log::LevelFilter::Info)
         .init();
@@ -20,7 +21,7 @@ fn main() {
     debug!("collection: {:?}", collection);
 
     let args = App::new("lin-help")
-        .version(version)
+        .version(VERSION)
         .about("a handy tool for collecting common shell commands")
         .subcommand(
             Command::new("add")
@@ -49,37 +50,37 @@ fn main() {
         Some(("search", args)) => {
             let term = args.value_of("TERM").unwrap();
 
-            // TODO dedup table creation
-            let mut table = Table::new();
-            table.set_header(vec!["ID", "Command", "Description"]);
+            let filtered = collection
+                .entries
+                .into_iter()
+                .filter(|entry| entry.command.contains(term) || entry.description.contains(term))
+                .collect();
 
-            for entry in collection.get_entries() {
-                if entry.command.contains(term) || entry.description.contains(term) {
-                    table.add_row(vec![
-                        entry.id.to_string(),
-                        entry.command.clone(),
-                        entry.description.clone(),
-                    ]);
-                }
-            }
+            let table = create_table_with(filtered);
             info!("\n{}", table);
         }
         Some(("list", _)) => {
-            let mut table = Table::new();
-            table.set_header(vec!["ID", "Command", "Description"]);
-
-            for entry in collection.get_entries() {
-                table.add_row(vec![
-                    entry.id.to_string(),
-                    entry.command.to_string(),
-                    entry.description.to_string(),
-                ]);
-            }
+            let table = create_table_with(collection.entries);
             info!("\n{}", table);
         }
         _ => {
-            error!("unable to recognize subcommand");
+            error!("unknown subcommand");
+            error!("try `linh --help` for more information");
             std::process::exit(exitcode::USAGE);
         }
     }
+}
+
+fn create_table_with(entries: Vec<model::Entry>) -> Table {
+    let mut table = Table::new();
+    table.set_header(HEADERS);
+
+    for entry in entries {
+        table.add_row(vec![
+            entry.id.to_string(),
+            entry.command.to_string(),
+            entry.description.to_string(),
+        ]);
+    }
+    table
 }
