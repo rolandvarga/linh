@@ -144,6 +144,11 @@
       "id": 29,
       "command": "grep -Ei 'from|join' some_file.sql",
       "description": "grep ignore case for table names"
+    },
+    {
+      "id": 30,
+      "command": "git tag v0.1.0 -a; git push --tags",
+      "description": "git create an annotated & publish it"
     }
   ]
 }
