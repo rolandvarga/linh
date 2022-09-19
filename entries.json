@@ -149,6 +149,11 @@
       "id": 30,
       "command": "git tag v0.1.0 -a; git push --tags",
       "description": "git create an annotated & publish it"
+    },
+    {
+      "id": 31,
+      "command": "aws s3 ls s3://bucket-name/2022-09-18",
+      "description": "s3 list all objects matching prefix"
     }
   ]
 }
