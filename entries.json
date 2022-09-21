@@ -154,6 +154,11 @@
       "id": 31,
       "command": "aws s3 ls s3://bucket-name/2022-09-18",
       "description": "s3 list all objects matching prefix"
+    },
+    {
+      "id": 32,
+      "command": "cat ~/.ssh/known_hosts | grep HOST_YOU_WANT_BYEBYE | awk '{print }' | xargs -I_dahost ssh-keygen -R _dahost",
+      "description": "ask SSH to remove a host key from known_hosts"
     }
   ]
 }
