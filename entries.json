@@ -159,6 +159,11 @@
       "id": 32,
       "command": "cat ~/.ssh/known_hosts | grep HOST_YOU_WANT_BYEBYE | awk '{print }' | xargs -I_dahost ssh-keygen -R _dahost",
       "description": "ask SSH to remove a host key from known_hosts"
+    },
+    {
+      "id": 33,
+      "command": "git checkout HEAD -- my-file.txt",
+      "description": "git reset single file; -- means 'treat every argument after this point as a filename'"
     }
   ]
 }
