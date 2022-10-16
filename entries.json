@@ -164,6 +164,11 @@
       "id": 33,
       "command": "git checkout HEAD -- my-file.txt",
       "description": "git reset single file; -- means 'treat every argument after this point as a filename'"
+    },
+    {
+      "id": 34,
+      "command": "ls -- {mr-[0-9]-[0-9],mr-out-*} | xargs -I_myfile rm _myfile",
+      "description": "list fs objects with multiple patterns"
     }
   ]
 }
