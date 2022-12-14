@@ -169,6 +169,11 @@
       "id": 34,
       "command": "ls -- {mr-[0-9]-[0-9],mr-out-*} | xargs -I_myfile rm _myfile",
       "description": "list fs objects with multiple patterns"
+    },
+    {
+      "id": 35,
+      "command": "fzf --preview 'cat {}'",
+      "description": "preview command for every fs object via fzf"
     }
   ]
 }
