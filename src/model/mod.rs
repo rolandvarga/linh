@@ -1,3 +1,4 @@
+use std::env;
 use dirs::home_dir;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ord;
@@ -6,6 +7,10 @@ use std::sync::atomic::AtomicUsize;
 use std::fs::{File, OpenOptions};
 use std::io::Read;
 use std::path::Path;
+
+use rusoto_s3::{GetObjectOutput, S3Client, S3};
+use tokio::io::AsyncReadExt; use tokio_io::AsyncRead;
+use async_trait::async_trait;
 
 static COUNTER: AtomicUsize = AtomicUsize::new(1);
 
@@ -32,7 +37,77 @@ pub struct Collection {
 }
 
 impl Collection {
+    pub fn save(&mut self, entry: Entry) {
+    }
+}
+
+
+#[async_trait]
+pub trait Backend {
+    async fn load_entries(&self) -> Collection;
+    async fn save_entry_in(&mut self, mut collection: Collection, entry: Entry);
+}
+
+pub struct S3Storage {
+    bucket: String,
+    key: String,
+    region: rusoto_core::Region,
+}
+
+impl S3Storage {
+    pub fn new(bucket: String, key: String, region: rusoto_core::Region) -> Self {
+        Self {
+            bucket,
+            key,
+            region,
+        }
+    }
+}
+
+#[async_trait]
+impl Backend for S3Storage {
+    async fn load_entries(&self) -> Collection {
+        let client = S3Client::new(self.region.to_owned());
+        let request_input = rusoto_s3::GetObjectRequest {
+            bucket: self.bucket.to_owned(),
+            key: self.key.to_owned(),
+            ..Default::default()
+        };
+
+        match client.get_object(request_input).await {
+            Ok(output) => {
+                // read the body of the response
+                let body = output.body.unwrap();
+                let mut reader = body.into_async_read();
+
+                let mut contents = String::new();
+                reader.read_to_string(&mut contents).await.unwrap();
+
+                serde_json::from_str::<Collection>(&contents.as_str()).unwrap()
+            }
+            Err(_error) => {
+                println!("getting object");
+                Collection { entries: vec![] }
+            }
+        }
+    }
+
+    async fn save_entry_in(&mut self, mut collection: Collection, entry: Entry) {
+        todo!("don't forget to sort & increment")
+    }
+}
+
+pub struct LocalStorage {}
+
+impl LocalStorage {
     pub fn new() -> Self {
+        return LocalStorage {  };
+    }
+}
+
+#[async_trait]
+impl Backend for LocalStorage {
+    async fn load_entries(&self) -> Collection {
         let entry_path = get_entry_path();
         let mut file = OpenOptions::new()
             .read(true)
@@ -44,8 +119,9 @@ impl Collection {
         let mut contents = String::new();
         let size = file.read_to_string(&mut contents).unwrap();
 
+        // return early if there's nothing in the file
         if size as i32 == 0 {
-            return Self { entries: vec![] };
+            return Collection { entries: vec![] };
         };
 
         let mut collection = match serde_json::from_str::<Collection>(&contents.as_str()) {
@@ -64,15 +140,14 @@ impl Collection {
         collection
     }
 
-    pub fn save(&mut self, entry: Entry) {
-        self.entries.push(entry);
+    async fn save_entry_in(&mut self, mut collection: Collection, entry: Entry) {
+        collection.entries.push(entry);
 
         // write Collection as json to file
         let entry_path = get_entry_path();
         let file = File::create(entry_path).unwrap();
-        match serde_json::to_writer_pretty(file, self) {
+        match serde_json::to_writer_pretty(file, &collection) {
             Ok(_) => {
-                // TODO info!("successfully saved entry: {:?}", entry);
                 info!("successfully saved entry");
                 std::process::exit(exitcode::OK);
             }

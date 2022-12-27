@@ -1,24 +1,27 @@
+use std::{env, process::exit};
+
 use clap::{arg, App, Command};
 use comfy_table::Table;
 use exitcode;
-use model::Collection;
 
 extern crate pretty_env_logger;
 #[macro_use]
 extern crate log;
 
+use rusoto_core::Region;
+
+use model::*;
 mod model;
 
 static VERSION: &str = env!("CARGO_PKG_VERSION");
 static HEADERS: [&str; 3] = ["ID", "COMMAND", "DESCRIPTION"];
 
-fn main() {
+
+#[tokio::main]
+async fn main() {
     pretty_env_logger::formatted_builder()
         .filter_level(log::LevelFilter::Info)
         .init();
-
-    let mut collection = Collection::new();
-    debug!("collection: {:?}", collection);
 
     let args = App::new("lin-help")
         .version(VERSION)
@@ -37,7 +40,25 @@ fn main() {
                 .arg(arg!(<TERM> "command or description to search for")),
         )
         .subcommand(Command::new("list").about("list all available commands"))
+        .args([arg!(-l - -local "use local storage")])
         .get_matches();
+
+    let with_local_storage = args.get_one::<bool>("local");
+
+    let mut backend = match with_local_storage.unwrap() {
+        true => Box::new(LocalStorage::new()) as Box<dyn Backend>,
+        false => {
+            let bucket = env::var("LINH_BUCKET").ok().unwrap();
+            let key = env::var("LINH_KEY").ok().to_owned().unwrap();
+
+            Box::new(S3Storage::new(bucket, key, rusoto_core::Region::CaCentral1)) as Box<dyn Backend>
+        },
+    };
+
+    println!("{:?}", with_local_storage);
+
+    let mut collection = backend.load_entries();
+    let collection = collection.await;
 
     match args.subcommand() {
         Some(("add", args)) => {
@@ -45,7 +66,7 @@ fn main() {
             let description = args.value_of("DESCRIPTION").unwrap();
             let entry = model::Entry::new(command.to_string(), description.to_string());
 
-            collection.save(entry);
+            backend.save_entry_in(collection, entry);
         }
         Some(("search", args)) => {
             let term = args.value_of("TERM").unwrap();
