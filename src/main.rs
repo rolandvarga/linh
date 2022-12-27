@@ -1,6 +1,6 @@
-use std::{env, process::exit};
+use std::env;
 
-use clap::{arg, App, Command};
+use clap::{arg, Arg, App, Command, ArgAction};
 use comfy_table::Table;
 use exitcode;
 
@@ -40,12 +40,14 @@ async fn main() {
                 .arg(arg!(<TERM> "command or description to search for")),
         )
         .subcommand(Command::new("list").about("list all available commands"))
-        .args([arg!(-l - -local "use local storage")])
+        .args([
+            Arg::new("local").short('l').long("local").action(ArgAction::SetTrue),
+        ])
         .get_matches();
 
-    let with_local_storage = args.get_one::<bool>("local");
+    let with_local_storage = args.get_flag("local");
 
-    let mut backend = match with_local_storage.unwrap() {
+    let mut backend = match with_local_storage {
         true => Box::new(LocalStorage::new()) as Box<dyn Backend>,
         false => {
             let bucket = env::var("LINH_BUCKET").ok().unwrap();
@@ -54,8 +56,6 @@ async fn main() {
             Box::new(S3Storage::new(bucket, key, rusoto_core::Region::CaCentral1)) as Box<dyn Backend>
         },
     };
-
-    println!("{:?}", with_local_storage);
 
     let mut collection = backend.load_entries();
     let collection = collection.await;

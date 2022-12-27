@@ -93,7 +93,9 @@ impl Backend for S3Storage {
     }
 
     async fn save_entry_in(&mut self, mut collection: Collection, entry: Entry) {
-        todo!("don't forget to sort & increment")
+        // todo!("don't forget to sort & increment");
+
+        let client = S3Client::new(self.region.to_owned());
     }
 }
 
