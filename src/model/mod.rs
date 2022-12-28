@@ -1,14 +1,18 @@
 use std::env;
+// use std::future::Future;
 use dirs::home_dir;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ord;
 use std::sync::atomic::AtomicUsize;
 
 use std::fs::{File, OpenOptions};
-use std::io::Read;
+use std::io::{Read, Cursor};
 use std::path::Path;
 
-use rusoto_s3::{GetObjectOutput, S3Client, S3};
+use futures::{Future, Stream};
+
+use rusoto_core::ByteStream;
+use rusoto_s3::{S3Client, S3, PutObjectRequest};
 use tokio::io::AsyncReadExt; use tokio_io::AsyncRead;
 use async_trait::async_trait;
 
@@ -85,6 +89,7 @@ impl Backend for S3Storage {
 
                 serde_json::from_str::<Collection>(&contents.as_str()).unwrap()
             }
+            // TODO create object if doesn't exist
             Err(_error) => {
                 println!("getting object");
                 Collection { entries: vec![] }
@@ -93,9 +98,38 @@ impl Backend for S3Storage {
     }
 
     async fn save_entry_in(&mut self, mut collection: Collection, entry: Entry) {
-        // todo!("don't forget to sort & increment");
+        collection.entries.push(entry);
+        let json_collection = serde_json::to_string_pretty(&collection).unwrap();
 
         let client = S3Client::new(self.region.to_owned());
+        // let mut request = PutObjectRequest::default();
+        // request.bucket = self.bucket.to_owned();
+        // request.key = self.key.to_owned();
+        // request.body = Some(ByteStream::from(Cursor::new(json_collection)));
+
+
+        // client.put_object(request);
+        //
+        info!("we here");
+
+        let mut file = File::create("/tmp/entries.json").unwrap();
+        match serde_json::to_writer_pretty(&file, &collection) {
+            Ok(_) => {
+                info!("successfully saved entry");
+            }
+            Err(e) => {
+                error!("unable to update entries: {}", e);
+                std::process::exit(exitcode::SOFTWARE);
+            }
+        }
+
+        let mut contents = Vec::new();
+        file.read_to_end(&mut contents).unwrap();
+
+        let mut request = PutObjectRequest::default();
+        request.bucket = self.bucket.to_owned();
+        request.key = self.key.to_owned();
+        request.body = Some(ByteStream::from(contents));
     }
 }
 

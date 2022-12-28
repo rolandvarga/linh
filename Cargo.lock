@@ -744,6 +744,7 @@ dependencies = [
  "comfy-table",
  "dirs",
  "exitcode",
+ "futures 0.3.25",
  "log",
  "pretty_env_logger",
  "rusoto_core",
