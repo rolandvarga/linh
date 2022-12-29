@@ -8,8 +8,6 @@ extern crate pretty_env_logger;
 #[macro_use]
 extern crate log;
 
-use rusoto_core::Region;
-
 use model::*;
 mod model;
 
@@ -20,7 +18,7 @@ static HEADERS: [&str; 3] = ["ID", "COMMAND", "DESCRIPTION"];
 #[tokio::main]
 async fn main() {
     pretty_env_logger::formatted_builder()
-        .filter_level(log::LevelFilter::Info)
+        .filter_level(log::LevelFilter::Debug)
         .init();
 
     let args = App::new("lin-help")
@@ -57,8 +55,7 @@ async fn main() {
         },
     };
 
-    let mut collection = backend.load_entries();
-    let collection = collection.await;
+    let collection = backend.load_entries().await;
 
     match args.subcommand() {
         Some(("add", args)) => {
@@ -66,7 +63,7 @@ async fn main() {
             let description = args.value_of("DESCRIPTION").unwrap();
             let entry = model::Entry::new(command.to_string(), description.to_string());
 
-            backend.save_entry_in(collection, entry);
+            backend.save_entry_in(collection, entry).await;
         }
         Some(("search", args)) => {
             let term = args.value_of("TERM").unwrap();
